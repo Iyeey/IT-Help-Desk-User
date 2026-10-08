@@ -1,0 +1,154 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>IT Help Desk</title>
+        <link rel="stylesheet" href="user.css">
+    </head>
+
+    <body>
+        <header class="header">
+            <h1>IT Help Desk</h1>
+            <p>Submit your IT problems and track your tickets</p>
+
+            <img src="IT Logo.png" class="logo">
+
+            <div class="org-name">
+                <h3>PCC</h3>
+                <h3>Information Technology</3>
+                <h3>Society</h3>
+            </div>
+        </header>
+
+        <main class="container">
+            <section class="box">
+                <h2>Report an IT Problem</h2>
+
+                <p class="description">Please enter the details of your problem.</p>
+
+                <p>Your Name
+                    <input type="text" id="name" placeholder="Enter your name">
+                </p>
+
+                <p>Problem Type
+                    <select id="type">
+                        <option value="">Select problem type</option>
+                        <option value="Hardware">Hardware</option>
+                        <option value="Software">Software</option>
+                        <option value="Network">Network</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </p>
+
+                <p>Upload a Picture
+                    <input type="file" id="picture" accept="image/*">
+                </p>
+
+                <p>Describe Your Problems
+                    <input type="text" id="problem" placeholder="Tell us what happened...">
+                </p>
+                
+                <button type="button" onclick="submitTicket()">
+                    Submit Ticket
+                </button>
+            </section>
+
+            <section class="box">
+                <div class="ticket-header">
+                    <div>
+                        <h2>My Tickets</h2>
+
+                        <p class="description">
+                            Track your reported IT Problems.
+                        </p>
+                    </div>
+
+                    <div class="ticket-count">
+
+                    <p id="ticketCount">0</p>
+                    <p>Tickets</p>
+                </div>
+                </div>
+
+                <div id="ticketList">
+                    <div class="no-ticket">
+                        <div class="empty-icon">
+                            🎫
+                        </div>
+
+                        <h3>No tickets yet</h3>
+
+                        <p>You haven't submitted any IT problems.</p>
+                    </div>    
+                </div>
+            </section>
+        </main>
+    </body>
+
+    <script>
+
+    var tickets = [];
+        function submitTicket() {
+            var name=document.getElementById("name").value;
+            var type=document.getElementById("type").value;
+            var problem=document.getElementById("problem").value;
+            var picture = document.getElementById("picture").files[0];
+
+            if (name == "" || type == "" || problem == "" || picture == null) {
+                alert("Please complete all fields");
+                return;
+            }
+
+            var confirmSubmit = confirm (
+                "Please review your information before submitting.\n\n" + "Name: " + name + "\n" +
+                "Problem Type: " + type + "\n" + "Problem: " + problem + "\n" + "Picture: " + picture.name +
+                "\n\n" + "Are these details correct?"
+            );
+
+            if (confirmSubmit == false) {
+                return;
+            }
+
+            var ticket = {
+                name: name, type: type, problem: problem, picture: URL.createObjectURL(picture),
+                pictureName: picture.name
+            };
+
+            tickets.push(ticket);
+
+            var jsonData = JSON.stringify(tickets);
+            
+        var ticketList = document.getElementById("ticketList");
+        var ticketCount = document.getElementById("ticketCount");
+
+        ticketList.innerHTML = "";
+
+        
+
+        for (var i = 0; i < tickets.length; i++) {
+
+        ticketList.innerHTML += 
+        '<div class="ticket-card">' + '<p class="ticket-title">IT Support Ticket</p>' + 
+        '<p>Ticket ID: <span>' + (i + 1) + '</span></p>' + '<p>Name: <span>' + tickets[i].name + '</span></p>'
+        + '<p>Problem Type: <span>' + tickets[i].type + '</span></p>' + '<p>Problem: <span>' + tickets[i].problem +
+        '</span></p>' + '<p>Picture: <a href="' + tickets[i].picture + '" target="_blank">📎 ' + tickets[i].pictureName + '</a></p>'
+        + '<div class="progress">' + '<div class="progress-text">' + '<span>Pending</span>'
+        + '<span>In Progress</span>' + '<span>Resolved</span>' + '</div>' + '<div class="progress-bar">'
+        + '<div class="progress-fill"></div>' + '</div>' + '</div>' + '</div>';
+
+        }
+
+        document.getElementById("name").value = "";
+        document.getElementById("type").value = "";
+        document.getElementById("problem").value = "";
+        document.getElementById("picture").value = "";
+
+        ticketCount.innerHTML = tickets.length;
+
+        alert("Ticket submitted successfully!");
+
+    };
+
+
+
+    </script>
+</html>
