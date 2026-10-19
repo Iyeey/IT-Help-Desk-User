@@ -1,0 +1,366 @@
+<html>
+    <head>
+        <title>IT Help Desk Admin</title>
+        <link rel="stylesheet" href="Admin.css">
+    </head>
+
+<body>
+    <header class="header">
+    <h1>IT Help Desk Admin</h1>
+    <p>Manage and organize reported IT problems.</p>
+
+    <img src="IT Logo.png" class="logo" alt="IT Logo">
+
+    <div class="org-name">
+        <h3>PCC</h3>
+        <h3>Information Technology</h3>
+        <h3>Society</h3>
+    </div>
+</header>
+
+    <main>
+        <h1>Admin Dashboard</h1>
+        <p>Manage and organize reported IT Help problems.</p>
+
+        <section class="summary-container">
+            <div class="summary-card">
+                <h3>Total Tickets</h3>
+                <p id="totalTickets">0</p>
+            </div>
+
+            <div class="summary-card">
+                <h3>Pending</h3>
+                <p id="pendingTickets">0</p>
+            </div>
+
+            <div class="summary-card">
+                <h3>In Progress</h3>
+                <p id="progressTickets">0</p>
+            </div>
+
+            <div class="summary-card">
+                <h3>Resolved</h3>
+                <p id="resolvedTickets">0</p>
+            </div>
+        </section>
+
+        <h2>Ticket Categories</h2>
+
+        <section class="category-container">
+            <div class="category-card">
+                <h3>Hardware</h3>
+                <p id="hardwareCount">0</p>
+                <button onclick="filterCategory('Hardware')">
+                View All</button>
+            </div>
+
+            <div class="category-card">
+                <h3>Software</h3>
+                <p id="softwareCount">0</p>
+                <button onclick="filterCategory('Software')">
+                View All</button>
+            </div>
+
+            <div class="category-card">
+                <h3>Network</h3>
+                <p id="networkCount">0</p>
+                <button onclick="filterCategory('Network')">
+                View All</button>
+            </div>
+
+            <div class="category-card">
+                <h3>Other</h3>
+                <p id="otherCount">0</p>
+                <button onclick="filterCategory('Other')">
+                View All</button>
+            </div>
+        </section>
+
+        <h2>All Tickets</h2>
+
+        <section class="ticket-section">
+            <div class="ticket-filters">
+                <input type="text" id="searchTicket" placeholder="Search tickets...">
+
+                <select id="categoryFilter">
+                    <option value="All">All Categories</option>
+                    <option value="Hardware">Hardware</option>
+                    <option value="Software">Software</option>
+                    <option value="Network">Network</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <select id="statusFilter">
+                    <option value="All">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                </select>
+            </div>
+
+            <table>
+                <tr>
+                    <th>Ticket ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Problem</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+
+                <tbody id="ticketTable">
+                    <tr>
+                    <td colspan="6">No tickets available.</td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="ticketDetails" class="ticket-details">
+            <h2>Ticket Details</h2>
+
+            <p>Ticket ID: <span id="detailID"></span></p>
+            <p>Name: <span id="detailName"></span></p>
+            <p>Category: <span id="detailCategory"></span></p>
+            <p>Problem: <span id="detailProblem"></span></p>
+            <p>Uploaded Picture:</p><img id="detailPicture" class="ticket-image"
+            alt="Uploaded ticket picture" onclick="openImagePreview()">
+
+
+            <p>Assign Technician: 
+                <input type="text" id="technician" placeholder="Enter technician name">
+            </p>
+
+            <p>Update Status: 
+                <select id="detailStatus">
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                </select>
+            </p>
+            
+            <div id="resolutionSection" class="resolution-section" style="display:none;">
+                <div class="resolution-header">
+                    <div class="resolution-icon">✓</div>
+                    
+                    <div>
+                        <h3>Technician's Resolution</h3>
+                        <p>Document the solution provided to resolve this IT concern.</p>
+                    </div>
+                </div>
+                
+                <label for="resolutionText">Resolution / Instructions</label>
+                <input type="text" id="resolutionText"
+                placeholder="Enter the solution or instructions...">
+                <p class="resolution-note">
+                    Provide details about how the IT problem was resolved.
+                </p>
+            </div>
+            
+            <button onclick="saveChanges()">Save Changes</button>
+            <button onclick="closeDetails()">Close</button>
+            
+        </section>
+
+    </main>
+    
+    <div id="imageModal" class="image-modal" onclick="closeImagePreview()">
+        <span class="close-modal">&times;</span>
+        <img id="modalImage" src="" alt="Full-size ticket picture">
+    </div>
+    <script>
+        var tickets = JSON.parse(localStorage.getItem("tickets")) || [];
+        var selectedTicket = -1;
+
+        function displayTickets() {
+            var table = document.getElementById("ticketTable");
+            var search = document.getElementById("searchTicket").value.toLowerCase();
+            var category = document.getElementById("categoryFilter").value;
+            var status = document.getElementById("statusFilter").value;
+
+            table.innerHTML= "";
+
+            var total = 0;
+            var pending = 0;
+            var progress = 0;
+            var resolved = 0;
+            var hardware = 0;
+            var software = 0;
+            var network = 0;
+            var other = 0;
+
+            for (var i = 0; i < tickets.length; i++) {
+                if (!tickets[i].status) {
+                    tickets[i].status = "Pending";
+                }
+
+                total++;
+
+                if(tickets[i].status == "Pending") {
+                    pending++;
+                } else if (tickets[i].status == "In Progress") {
+                    progress++;
+                } else if (tickets[i].status == "Resolved") {
+                    resolved++;
+                }
+
+                if (tickets[i].type == "Hardware") {
+                    hardware++;
+                } else if (tickets[i].type == "Software") {
+                    software++;
+                } else if (tickets[i].type == "Network") {
+                    network++;
+                } else {
+                    other++;
+                }
+
+                var name = (tickets[i].name || "").toLowerCase();
+                var problem = (tickets[i].problem || "").toLowerCase();
+
+                if (
+                    (name.includes(search) || problem.includes(search)) &&
+                    (category == "All" || tickets[i].type == category) &&
+                    (status == "All" || tickets[i].status == status) 
+                ) {
+                    var row = document.createElement("tr");
+                    
+                    row.innerHTML =
+                    "<td>" + (i + 1) + "</td>" + "<td>" + tickets[i].name + "</td>" + "<td>" + tickets[i].type + "</td>" +
+                    "<td>" + tickets[i].problem + "</td>" +  "<td>" + tickets[i].status +
+                    "</td>" +  '<td><button onclick="viewTicket(' + i + ')">View</button></td>';
+
+                    table.appendChild(row);
+                }
+            }
+
+            if (table.innerHTML =="") {
+                table.innerHTML = '<tr><td colspan="6">No tickets available.</td></tr>';
+            }
+
+            document.getElementById("totalTickets").innerHTML = total;
+            document.getElementById("pendingTickets").innerHTML = pending;
+            document.getElementById("progressTickets").innerHTML = progress;
+            document.getElementById("resolvedTickets").innerHTML = resolved;
+            
+            document.getElementById("hardwareCount").innerHTML = hardware;
+            document.getElementById("softwareCount").innerHTML = software;
+            document.getElementById("networkCount").innerHTML = network;
+            document.getElementById("otherCount").innerHTML = other;
+        }
+
+        function filterCategory(type) {
+            document.getElementById("categoryFilter").value = type;
+            displayTickets();
+
+            document.getElementById("searchTicket").scrollIntoView({
+
+            });
+        }
+
+        function viewTicket(index) {
+            selectedTicket = index;
+
+            document.getElementById("detailID").innerHTML = index + 1;
+            document.getElementById("detailName").innerHTML = tickets[index].name;
+            document.getElementById("detailCategory").innerHTML = tickets[index].type;
+            document.getElementById("detailProblem").innerHTML = tickets[index].problem;
+
+            document.getElementById("technician").value =
+            tickets[index].technician || "";
+
+            document.getElementById("detailStatus").value =
+            tickets[index].status || "Pending";
+
+            document.getElementById("resolutionText").value =
+            tickets[index].resolution || "";
+            toggleResolutionField();
+
+            var picture = document.getElementById("detailPicture");
+            
+            if (tickets[index].picture) {
+                picture.src = tickets[index].picture;
+                picture.style.display = "block";
+            } else {
+                picture.removeAttribute("src");
+                picture.style.display = "none";
+            }
+
+            document.getElementById("ticketDetails").style.display = "block";
+            document.getElementById("ticketDetails").scrollIntoView({
+            behavior: "smooth"
+            });
+        }
+
+        function saveChanges() {
+            if (selectedTicket == -1) {
+                return;
+            }
+
+             var status = document.getElementById("detailStatus").value;
+             var resolution = document.getElementById("resolutionText").value;
+             
+             if (status == "Resolved" && resolution.trim() == "") {
+                alert("Please enter the technician's resolution or instructions.");
+                return;
+            }
+            
+            tickets[selectedTicket].technician =
+            document.getElementById("technician").value;
+
+            tickets[selectedTicket].status = status;
+            tickets[selectedTicket].resolution = resolution;
+            
+            localStorage.setItem("tickets", JSON.stringify(tickets));
+            
+            displayTickets();
+            closeDetails();
+            
+            alert("Ticket updated successfully!");
+        
+        }
+        
+        function toggleResolutionField() {
+            var status = document.getElementById("detailStatus").value;
+            var section = document.getElementById("resolutionSection");
+            
+            if (status == "Resolved") {
+                section.style.display = "block";
+            } else {
+                section.style.display = "none";
+            }
+        }
+        
+        function openImagePreview() {
+            var picture = document.getElementById("detailPicture");
+            
+            if (picture.src && picture.style.display != "none") {
+                document.getElementById("modalImage").src = picture.src;
+                document.getElementById("imageModal").style.display = "flex";
+            }
+        }
+
+function closeImagePreview() {
+    document.getElementById("imageModal").style.display = "none";
+    document.getElementById("modalImage").src = "";
+}
+        document.getElementById("detailStatus").addEventListener("change", toggleResolutionField);
+
+        function closeDetails() {
+            document.getElementById("ticketDetails").style.display = "none";
+            selectedTicket = -1;
+            
+    }
+    document.getElementById("searchTicket").addEventListener("input", displayTickets);
+    document.getElementById("categoryFilter").addEventListener("change", displayTickets);
+    document.getElementById("statusFilter").addEventListener("change", displayTickets);
+       
+    window.addEventListener("storage", function(event) {
+        if (event.key == "tickets") {
+            tickets = JSON.parse(event.newValue || "[]");
+            displayTickets();
+        }
+            });
+            displayTickets();
+    </script>
+</body>
+</html>
